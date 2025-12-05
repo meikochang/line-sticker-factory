@@ -332,7 +332,7 @@
                     const canvas = document.createElement('canvas');
                     canvas.width = originalSheet.width;
                     canvas.height = originalSheet.height;
-                    const ctx = canvas.getContext('2d');
+                    const ctx = canvas.getContext('2d', { willReadFrequently: true });
                     ctx.drawImage(originalSheet, 0, 0);
 
                     const pieceW = originalSheet.width / cols;
@@ -343,7 +343,7 @@
                             const pCanvas = document.createElement('canvas');
                             pCanvas.width = pieceW;
                             pCanvas.height = pieceH;
-                            const pCtx = pCanvas.getContext('2d');
+                            const pCtx = pCanvas.getContext('2d', { willReadFrequently: true });
                             pCtx.drawImage(canvas, c*pieceW, r*pieceH, pieceW, pieceH, 0, 0, pieceW, pieceH);
                             pieces.push({
                                 id: r*cols+c+1,
@@ -371,15 +371,19 @@
                 const workH = targetH; 
                 
                 const processPromises = [];
+                
+                // 🔧 優化：重用 canvas 物件，避免重複創建
+                const workCanvas = document.createElement('canvas');
+                workCanvas.width = workW;
+                workCanvas.height = workH;
+                const workCtx = workCanvas.getContext('2d', { willReadFrequently: true });
 
                 for (let i = 0; i < slicedPieces.length; i++) {
                     const piece = slicedPieces[i];
                     setProgress(`準備處理: ${i + 1} / 12`);
                     
-                    const workCanvas = document.createElement('canvas');
-                    workCanvas.width = workW;
-                    workCanvas.height = workH;
-                    const workCtx = workCanvas.getContext('2d');
+                    // 🔧 優化：清空重用的 canvas，而非創建新的
+                    workCtx.clearRect(0, 0, workW, workH);
                     
                     const rawW = piece.rawCanvas.width;
                     const rawH = piece.rawCanvas.height;
@@ -402,15 +406,19 @@
                                 if (e.data.id === piece.id) {
                                     const processedImageData = e.data.processedImageData;
                                     
-                                    // 將 Worker 處理後的結果寫入回 Canvas
-                                    workCtx.putImageData(processedImageData, 0, 0);
+                                    // 🔧 優化：複製 canvas 以保存結果
+                                    const resultCanvas = document.createElement('canvas');
+                                    resultCanvas.width = workW;
+                                    resultCanvas.height = workH;
+                                    const resultCtx = resultCanvas.getContext('2d');
+                                    resultCtx.putImageData(processedImageData, 0, 0);
                                     
                                     // 移除監聽器，準備接收下一張圖片
                                     worker.removeEventListener('message', handler);
                                     resolve({
                                         id: piece.id,
-                                        dataUrl: workCanvas.toDataURL('image/png'),
-                                        rawSource: workCanvas
+                                        dataUrl: resultCanvas.toDataURL('image/png'),
+                                        rawSource: resultCanvas
                                     });
                                 }
                             };
@@ -431,11 +439,17 @@
                         });
                         processPromises.push(workerPromise);
                     } else {
-                        // 如果不需去背，直接生成結果
+                        // 如果不需去背，複製 canvas 並直接生成結果
+                        const resultCanvas = document.createElement('canvas');
+                        resultCanvas.width = workW;
+                        resultCanvas.height = workH;
+                        const resultCtx = resultCanvas.getContext('2d');
+                        resultCtx.drawImage(workCanvas, 0, 0);
+                        
                         results.push({
                             id: piece.id,
-                            dataUrl: workCanvas.toDataURL('image/png'),
-                            rawSource: workCanvas
+                            dataUrl: resultCanvas.toDataURL('image/png'),
+                            rawSource: resultCanvas
                         });
                     }
                 }
