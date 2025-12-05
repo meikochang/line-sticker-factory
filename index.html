@@ -642,4 +642,92 @@
                                             </div>
                                         </div>
 
-                                        <button onClick={()=>setShowAdvanced(!showAdvanced)} className="w-full flex items
+                                        <button onClick={()=>setShowAdvanced(!showAdvanced)} className="w-full flex items-center justify-between text-xs text-slate-500 hover:text-slate-700 pt-2 border-t border-slate-200">
+                                            <span className="flex items-center gap-1"><Settings className="w-3 h-3"/> 顯示進階設定</span>
+                                            <ChevronDown className={`w-3 h-3 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
+                                        </button>
+
+                                        <div className={`collapse-content ${showAdvanced ? 'collapse-open' : ''}`}>
+                                            <div className="pt-4 space-y-4">
+                                                <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                                                    <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+                                                        <span className="flex items-center gap-1"><CropIcon className="w-3 h-3"/> 裁切縮放 (去除黑邊)</span>
+                                                        <span className="font-bold text-line">{Math.round((zoomLevel - 1) * 100)}%</span>
+                                                    </div>
+                                                    <input type="range" min="1.00" max="1.50" step="0.01" value={zoomLevel} onChange={(e)=>setZoomLevel(Number(e.target.value))} className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer"/>
+                                                    <div className="text-[10px] text-slate-400 mt-1">若兩側仍有黑邊，請將數值往右拉大</div>
+                                                </div>
+
+                                                <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                                                    <div className="flex justify-between text-[10px] text-slate-400 mb-1"><span>目標顏色</span><span className="font-mono">{targetColorHex}</span></div>
+                                                    <input type="color" value={targetColorHex} onChange={(e)=>setTargetColorHex(e.target.value)} className="w-full h-8 rounded cursor-pointer border border-slate-300 p-0" />
+                                                </div>
+                                                <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                                                    <div className="flex justify-between text-[10px] text-slate-400 mb-1"><span>色彩容許度 (Tolerance)</span><span>{colorTolerance}</span></div>
+                                                    <input type="range" min="1" max="100" value={colorTolerance} onChange={(e)=>setColorTolerance(Number(e.target.value))} className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer"/>
+                                                </div>
+                                                <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                                                    <div className="flex justify-between text-[10px] text-slate-400 mb-1"><span>邊緣柔化 (Smoothness)</span><span>{smoothness}</span></div>
+                                                    <input type="range" min="0" max="10" step="1" value={smoothness} onChange={(e)=>setSmoothness(Number(e.target.value))} className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer"/>
+                                                </div>
+                                                <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                                                    <span className="text-[10px] text-slate-400">溢色去除 (Despill)</span>
+                                                    <input type="checkbox" checked={despill} onChange={(e)=>setDespill(e.target.checked)} className="accent-green-500 w-4 h-4"/>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <div className="flex justify-center gap-4 pt-8 border-t border-slate-100 mt-6">
+                            <button onClick={()=>setStep(1)} className="px-6 py-3 rounded-xl font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 hover:text-slate-700 transition">重新上傳</button>
+                            <button onClick={performProcessing} disabled={isProcessing} className="bg-line hover:bg-green-600 text-white px-12 py-3 rounded-xl font-bold shadow-lg shadow-green-100 transition-all btn-press flex items-center justify-center gap-2 min-w-[240px]">
+                                {isProcessing ? <><Loader /><span>處理中 ({processedCount}/12)</span></> : <><Eraser />執行極速去背</>}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Step 3: Download */}
+                    <div className={`step-card bg-white rounded-3xl shadow-lg border border-slate-100 p-8 mb-8 ${step !== 3 && 'hidden'}`}>
+                         <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-6 pb-6 border-b border-slate-100">
+                            <div className="flex-1">
+                                <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2 mb-2"><CheckCircle className="text-line"/>設定與打包</h2>
+                                <p className="text-slate-500 text-sm">請勾選主圖(Main)與標籤圖(Tab)。</p>
+                            </div>
+                            <div className="bg-slate-50 px-4 py-3 rounded-xl border border-slate-200 flex items-center gap-3">
+                                <div className="flex flex-col"><span className="text-xs font-bold text-slate-500 flex items-center gap-1"><Hash className="w-3 h-3"/> 起始編號</span><span className="text-[10px] text-slate-400">接續上一批次</span></div>
+                                <input type="number" min="1" value={startNumber} onChange={(e) => setStartNumber(Math.max(1, parseInt(e.target.value) || 1))} className="w-20 h-10 border border-slate-300 rounded-lg text-center font-bold text-lg focus:ring-2 focus:ring-green-500 outline-none" />
+                            </div>
+                            <button onClick={downloadZip} className="w-full xl:w-auto bg-line hover:bg-green-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all btn-press flex items-center justify-center gap-2"><Download className="w-5 h-5" />下載完整 ZIP</button>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                            {finalImages.map((img, idx) => (
+                                <div key={img.id} className="bg-white rounded-2xl border border-slate-200 p-3 hover:border-green-300 hover:shadow-md transition-all">
+                                    <div className="aspect-[370/320] grid-bg rounded-xl flex items-center justify-center overflow-hidden border border-slate-100 mb-3"><img src={img.dataUrl} className="w-full h-full object-contain" /></div>
+                                    <div className="text-center text-sm font-bold text-slate-600 mb-4 bg-slate-100 rounded py-1">{getFileName(idx)}.png</div>
+                                    <div className="space-y-2">
+                                        <label className="flex items-center gap-2 cursor-pointer group">
+                                            <input type="radio" name="main_select" checked={mainId === img.id} onChange={() => setMainId(img.id)} className="hidden custom-radio"/>
+                                            <div className={`flex-1 text-xs border rounded-lg px-2 py-2 flex items-center gap-1 justify-center transition-all ${mainId === img.id ? 'bg-green-50 border-line text-line font-bold' : 'bg-slate-50 border-slate-200 text-slate-500 group-hover:bg-white group-hover:border-green-200'}`}><Star className="w-3 h-3" /> Main</div>
+                                        </label>
+                                        <label className="flex items-center gap-2 cursor-pointer group">
+                                            <input type="radio" name="tab_select" checked={tabId === img.id} onChange={() => setTabId(img.id)} className="hidden custom-radio"/>
+                                            <div className={`flex-1 text-xs border rounded-lg px-2 py-2 flex items-center gap-1 justify-center transition-all ${tabId === img.id ? 'bg-green-50 border-line text-line font-bold' : 'bg-slate-50 border-slate-200 text-slate-500 group-hover:bg-white group-hover:border-green-200'}`}><Tag className="w-3 h-3" /> Tab</div>
+                                        </label>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="text-center mt-10"><button onClick={()=>setStep(1)} className="text-slate-400 hover:text-slate-600 text-sm font-medium transition-colors underline">處理下一張原始圖</button></div>
+                    </div>
+                    <footer className="text-center text-lg font-bold text-black mt-12 mb-8">© 2025 Meiko 微課頻道 | LINE Sticker Factory</footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
