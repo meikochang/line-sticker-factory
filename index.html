@@ -81,7 +81,7 @@
     <script type="text/babel">
         const { useState, useEffect, useRef, useCallback } = React;
 
-        // --- Icons Definitions (Full Paths, No Truncation) ---
+        // --- Icons (Unified Naming) ---
         const Icon = ({ children, className, spin, ...props }) => (
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`${className || ''} ${spin ? 'animate-spin' : ''}`} {...props}>{children}</svg>
         );
@@ -106,7 +106,7 @@
         // --- Logo from Notion ---
         const logoSrc = "https://rain-galley-248.notion.site/image/attachment%3A1a4404e1-e6b1-4f29-a495-123224c6135a%3AMeiko_logo.png?table=block&id=2c04c228-35e5-80d2-b534-f270fb01613d&spaceId=cf48a189-fd68-4fe6-a35c-bf6538001b35&width=770&userId=&cache=v2";
 
-        // --- WEB WORKER CODE (Complete, No Truncation) ---
+        // --- WEB WORKER CODE ---
         const workerScript = `
         self.onmessage = function(e) {
             const { imageBitmap, id, targetColor, tolerance, smoothness, despill } = e.data;
@@ -117,31 +117,22 @@
             ctx.drawImage(imageBitmap, 0, 0);
             const imgData = ctx.getImageData(0, 0, w, h);
             const data = imgData.data;
-            
             const tr = parseInt(targetColor.slice(1, 3), 16);
             const tg = parseInt(targetColor.slice(3, 5), 16);
             const tb = parseInt(targetColor.slice(5, 7), 16);
             const distThreshold = tolerance * 4.42; 
             const ramp = Math.max(1, smoothness * 5); 
-
             for (let i = 0; i < data.length; i += 4) {
                 const r = data[i];
                 const g = data[i + 1];
                 const b = data[i + 2];
                 const dist = Math.sqrt((r - tr) * (r - tr) + (g - tg) * (g - tg) + (b - tb) * (b - tb));
-                
                 let alpha = 255;
-                if (dist < distThreshold) {
-                    alpha = 0; 
-                } else if (dist < distThreshold + ramp) {
-                    alpha = ((dist - distThreshold) / ramp) * 255;
-                }
-
+                if (dist < distThreshold) alpha = 0; 
+                else if (dist < distThreshold + ramp) alpha = ((dist - distThreshold) / ramp) * 255;
                 if (despill && alpha > 0) {
                     if (targetColor.toLowerCase() === '#00ff00') {
-                        if (g > r && g > b) {
-                            data[i+1] = (r + b) / 2; 
-                        }
+                        if (g > r && g > b) data[i+1] = (r + b) / 2; 
                     }
                 }
                 data[i + 3] = alpha;
@@ -150,9 +141,7 @@
             canvas.convertToBlob({ type: 'image/png' }).then(blob => {
                 const reader = new FileReader();
                 reader.readAsDataURL(blob);
-                reader.onloadend = () => {
-                    self.postMessage({ id, dataUrl: reader.result });
-                };
+                reader.onloadend = () => self.postMessage({ id, dataUrl: reader.result });
             });
         };
         `;
@@ -193,6 +182,10 @@
             
             // Settings Panel visibility (Default closed)
             const [showSettings, setShowSettings] = useState(false); 
+            
+            // Missing state added here:
+            const [showAdvanced, setShowAdvanced] = useState(true);
+
             const [showPromptGuide, setShowPromptGuide] = useState(true); 
             const [copySuccess, setCopySuccess] = useState(false);
             const [activeTheme, setActiveTheme] = useState('daily');
@@ -202,9 +195,7 @@
             const [colorTolerance, setColorTolerance] = useState(30); 
             const [smoothness, setSmoothness] = useState(2); 
             const [despill, setDespill] = useState(true); 
-            // FIXED: Zoom/Crop Level set to 1.00 to prevent cutting text
             const [zoomLevel, setZoomLevel] = useState(1.00); 
-
             const workerRef = useRef(null);
 
             useEffect(() => {
@@ -685,3 +676,4 @@
     </script>
 </body>
 </html>
+```
