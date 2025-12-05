@@ -76,7 +76,7 @@
         /* Highlights in Dark Mode */
         .var-highlight { color: #f87171; font-weight: bold; background-color: rgba(254, 242, 242, 0.1); padding: 0 4px; border-radius: 4px; }
         .fixed-val { font-weight: bold; color: #38bdf8; } 
-        /* Modified per request: Black text on yellow background for high contrast warning */
+        /* Modified per request: Black text on yellow background */
         .black-highlight { color: #000000; background-color: #fbbf24; font-weight: bold; padding: 2px 4px; border-radius: 4px; } 
     </style>
 </head>
@@ -90,7 +90,7 @@
         const Icon = ({ children, className, spin, ...props }) => (
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`${className || ''} ${spin ? 'animate-spin' : ''}`} {...props}>{children}</svg>
         );
-        const UploadIcon = (props) => <Icon {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></Icon>;
+        const Upload = (props) => <Icon {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></Icon>;
         const Scissors = (props) => <Icon {...props}><circle cx="6" cy="6" r="3"/><path d="M8.12 8.12 12 12"/><path d="M20 4 8.12 15.88"/><circle cx="6" cy="18" r="3"/><path d="M14.8 14.8 20 20"/></Icon>;
         const Download = (props) => <Icon {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></Icon>;
         const Loader = (props) => <Icon {...props} spin><path d="M21 12a9 9 0 1 1-6.219-8.56"/></Icon>;
@@ -106,7 +106,7 @@
         const Star = (props) => <Icon {...props}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></Icon>;
         const Tag = (props) => <Icon {...props}><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></Icon>;
         const CropIcon = (props) => <Icon {...props}><path d="M6.13 1L6 16a2 2 0 0 0 2 2h15"/><path d="M1 6.13L16 6a2 2 0 0 1 2 2v15"/></Icon>;
-        const InfoIcon = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></Icon>;
+        const Info = (props) => <Icon {...props}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></Icon>;
 
         // --- FIXED LOGO (Using Notion URL) ---
         const logoSrc = "https://rain-galley-248.notion.site/image/attachment%3A1a4404e1-e6b1-4f29-a495-123224c6135a%3AMeiko_logo.png?table=block&id=2c04c228-35e5-80d2-b534-f270fb01613d&spaceId=cf48a189-fd68-4fe6-a35c-bf6538001b35&width=770&userId=&cache=v2";
@@ -601,7 +601,7 @@
                                     ) : (
                                         <div className="flex flex-col items-center justify-center z-10 pointer-events-none">
                                             <div className="w-16 h-16 bg-slate-800 text-line rounded-2xl flex items-center justify-center mb-4 shadow-sm group-hover:scale-110 group-hover:bg-white transition-all border border-slate-700">
-                                                <UploadIcon className="w-8 h-8" />
+                                                <Upload className="w-8 h-8" />
                                             </div>
                                             <span className="bg-white text-slate-900 px-6 py-2 rounded-full font-bold shadow-md group-hover:shadow-lg transition-all">選擇檔案</span>
                                             <span className="text-xs text-slate-500 mt-3">或是將圖片拖曳至此</span>
@@ -796,7 +796,7 @@
                             <div className="flex flex-col items-end gap-3 w-full xl:w-auto">
                                 {/* Yellow Tip Box */}
                                 <div className="bg-yellow-500/10 border border-yellow-500/30 p-3 rounded-xl text-xs text-yellow-200 max-w-lg">
-                                    <div className="font-bold flex items-center gap-1 mb-1 text-yellow-400"><InfoIcon className="w-3 h-3"/> 下載前記得先做兩件小事：</div>
+                                    <div className="font-bold flex items-center gap-1 mb-1 text-yellow-400"><Info className="w-3 h-3"/> 下載前記得先做兩件小事：</div>
                                     <ul className="list-disc pl-4 space-y-1 opacity-90">
                                         <li>選擇 <span className="text-white font-bold">main / tab 封面圖</span>：挑一張最能代表你角色靈魂的封面圖，按一下就設定完成！</li>
                                         <li>設定 <span className="text-white font-bold">檔名起始編號</span>：第二組貼圖請改為 13，下載後 40 張貼圖自動排隊，完全不撞號 ✨</li>
