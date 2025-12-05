@@ -1,6 +1,11 @@
 // worker.js
 
-// --- Helper Functions (從您的 App.js 複製過來的) ---
+// --- 核心距離計算函數 ---
+
+// 歐幾里德距離 (用於計算 RGB 空間中的顏色差異)
+const colorDistance = (r1, g1, b1, r2, g2, b2) => {
+    return Math.sqrt(Math.pow(r1 - r2, 2) + Math.pow(g1 - g2, 2) + Math.pow(b1 - b2, 2));
+};
 
 const hexToRgb = (hex) => {
     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -11,8 +16,14 @@ const hexToRgb = (hex) => {
     } : null;
 };
 
-// HSV 邏輯 (用於 #00FF00 純綠色幕去背)
-const isPixelBackgroundHSV = (r, g, b, tolerancePercent) => {
+// 1. RGB 距離計算
+// 回傳實際距離
+const isTargetColorRGB = (r, g, b, targetRgb) => {
+    return colorDistance(r, g, b, targetRgb.r, targetRgb.g, targetRgb.b);
+};
+
+// 2. HSV 相似度計算 (專用於綠幕，回傳相似度分數 0~1)
+const isPixelBackgroundHSV = (r, g, b) => {
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
     const delta = max - min;
@@ -26,54 +37,90 @@ const isPixelBackgroundHSV = (r, g, b, tolerancePercent) => {
     const saturation = max === 0 ? 0 : delta / max;
     const value = max / 255;
     
-    // 綠色範圍 H: 60-180
-    const toleranceFactor = tolerancePercent / 100;
-    const minSat = 0.25 * (1 - toleranceFactor); // 調整飽和度範圍
-    const minVal = 0.35 * (1 - toleranceFactor); // 調整亮度範圍
-    
+    // 色相範圍 (H: 60-180 為綠色)
     const isGreenHue = (hue >= 60 && hue <= 180);
-    const isStandardGreenScreen = isGreenHue && saturation > minSat && value > minVal;
+
+    if (!isGreenHue) return 0; // 色相不對，直接排除
     
-    // 額外判斷綠色是否明顯佔優勢
-    const isDominantGreen = (g > r + 30) && (g > b + 30) && (g > 80);
-    
-    return isStandardGreenScreen || isDominantGreen;
+    // 返回飽和度作為相似度分數 (純綠幕為高飽和)
+    return saturation; 
 };
 
-// RGB 距離邏輯 (用於一般顏色去背，如 #000000 黑底)
-const isTargetColorRGB = (r, g, b, targetRgb, toleranceDist) => {
-    // 歐幾里德距離
-    const dist = Math.sqrt(Math.pow(r - targetRgb.r, 2) + Math.pow(g - targetRgb.g, 2) + Math.pow(b - targetRgb.b, 2));
-    return dist <= toleranceDist;
-};
 
-const isPixelBackground = (r, g, b, targetHex, tolerancePercent) => {
-    if (targetHex.toLowerCase() === '#00ff00') {
-        // 使用 HSV 邏輯 (專為綠幕優化)
-        return isPixelBackgroundHSV(r, g, b, tolerancePercent);
-    } else {
-        // 使用 RGB 距離邏輯 (適用於其他顏色)
-        const targetRgb = hexToRgb(targetHex) || {r:0, g:0, b:0};
-        const maxDist = 442; // RGB(0,0,0) 到 RGB(255,255,255) 的最大距離
-        const toleranceDist = maxDist * (tolerancePercent / 100);
-        return isTargetColorRGB(r, g, b, targetRgb, toleranceDist);
-    }
-};
-
-const removeBgGlobal = (imgData, targetHex, tolerancePercent) => {
+// 3. 核心去背邏輯：實現邊緣柔化 (取代舊的 removeBgGlobal/FloodFill)
+const removeBgFeathered = (imgData, targetHex, tolerancePercent, smoothnessPercent) => {
     const data = imgData.data;
     const len = data.length;
+    
+    // 將百分比轉為範圍值 (0.01 ~ 1)
+    const toleranceFactor = tolerancePercent / 100;
+    const smoothnessFactor = smoothnessPercent / 100;
+
+    const isGreenScreen = targetHex.toLowerCase() === '#00ff00';
+    const targetRgb = isGreenScreen ? null : hexToRgb(targetHex) || {r:0, g:0, b:0};
+    const maxDist = 442; // RGB 最大距離
+
     for (let i = 0; i < len; i += 4) {
-        if (isPixelBackground(data[i], data[i+1], data[i+2], targetHex, tolerancePercent)) {
-            data[i+3] = 0; // 設定 Alpha 為 0 (完全透明)
+        const r = data[i], g = data[i+1], b = data[i+2];
+        let similarity = 0; // 0: 完全不相似 (前景), 1: 完全相似 (背景)
+        
+        if (isGreenScreen) {
+            // 對綠幕使用 HSV 邏輯
+            similarity = isPixelBackgroundHSV(r, g, b); 
+        } else {
+            // 對其他顏色使用 RGB 距離
+            const distance = isTargetColorRGB(r, g, b, targetRgb);
+            // 正規化距離為相似度：距離越小，相似度越高
+            similarity = 1 - (distance / maxDist);
+        }
+
+        // --- 核心柔化處理 ---
+        
+        // 1. 設定柔化區間
+        const edgeStart = toleranceFactor; // 容許度門檻 (相似度達到此值以上完全透明)
+        const edgeEnd = Math.max(0, edgeStart - smoothnessFactor); // 柔化區間的終點
+        
+        if (similarity >= edgeStart) {
+            // 相似度夠高 (超過容許度)，完全透明
+            data[i+3] = 0; 
+        } else if (similarity > edgeEnd) {
+            // 處於柔化區間 (edgeEnd < similarity < edgeStart)
+            const range = edgeStart - edgeEnd;
+            const diff = similarity - edgeEnd;
+            
+            // 計算 Alpha 值：從 255 平滑過渡到 0
+            let alpha = Math.round(255 * (1 - diff / range));
+            
+            // 設為半透明，消除鋸齒
+            data[i+3] = Math.max(0, Math.min(255, alpha)); 
+        } else {
+            // 相似度低於柔化終點，完全不透明 (視為前景)
+            data[i+3] = 255; 
         }
     }
+    
     return imgData;
 };
 
+// 4. 連通去背 (Flood Fill) 邏輯 (保留以備用)
 const removeBgFloodFill = (imgData, w, h, targetHex, tolerancePercent) => {
     const data = imgData.data;
-    // 由於 Flood Fill 需要檢查邊界，從四個角落開始向內填充
+    const isGreenScreen = targetHex.toLowerCase() === '#00ff00';
+    const targetRgb = isGreenScreen ? null : hexToRgb(targetHex) || {r:0, g:0, b:0};
+    const maxDist = 442;
+    const toleranceDist = maxDist * (tolerancePercent / 100);
+
+    const isBackground = (r, g, b) => {
+        if (isGreenScreen) {
+            const similarity = isPixelBackgroundHSV(r, g, b);
+            return similarity >= (tolerancePercent / 100); // 使用 HSV 相似度門檻
+        } else {
+            const distance = colorDistance(r, g, b, targetRgb.r, targetRgb.g, targetRgb.b);
+            return distance <= toleranceDist;
+        }
+    };
+    
+    // 從四個角落開始向內填充
     const stack = [[0,0], [w-1,0], [0,h-1], [w-1,h-1]];
     const visited = new Uint8Array(w*h);
     
@@ -81,31 +128,27 @@ const removeBgFloodFill = (imgData, w, h, targetHex, tolerancePercent) => {
         const [x, y] = stack.pop();
         const offset = y*w + x;
 
-        // 檢查邊界和是否已拜訪
         if (x < 0 || x >= w || y < 0 || y >= h || visited[offset]) continue;
         visited[offset] = 1;
 
         const idx = offset * 4;
         
-        // 如果這個像素是背景色
-        if (isPixelBackground(data[idx], data[idx+1], data[idx+2], targetHex, tolerancePercent)) {
-            data[idx+3] = 0; // 設定透明
+        if (isBackground(data[idx], data[idx+1], data[idx+2])) {
+            data[idx+3] = 0; 
             
-            // 往四個方向繼續擴散
             stack.push([x+1, y], [x-1, y], [x, y+1], [x, y-1]);
         }
     }
     return imgData;
 };
 
+// 5. 侵蝕濾鏡
 const applyErosion = (imgData, w, h, strength) => {
     if (strength <= 0) return imgData;
 
     const data = imgData.data;
     
-    // 進行多次侵蝕 (依據 strength)
     for (let k = 0; k < strength; k++) {
-        // 複製 Alpha 通道用於下一輪運算 (避免立即修改影響當前邊緣判斷)
         const currentAlpha = new Uint8Array(w * h);
         for(let i=0; i<w*h; i++) currentAlpha[i] = data[i*4+3];
 
@@ -113,13 +156,9 @@ const applyErosion = (imgData, w, h, strength) => {
             for (let x = 1; x < w-1; x++) {
                 const idx = y*w + x;
                 
-                // 如果當前像素是不透明的 (前景)
                 if (currentAlpha[idx] > 0) {
-                    // 檢查它上下左右四個鄰居是否有透明的 (即邊緣)
                     if (currentAlpha[idx-1] === 0 || currentAlpha[idx+1] === 0 || 
                         currentAlpha[idx-w] === 0 || currentAlpha[idx+w] === 0) {
-                        
-                        // 將邊緣像素設為透明 (侵蝕)
                         data[idx*4+3] = 0; 
                     }
                 }
@@ -132,18 +171,16 @@ const applyErosion = (imgData, w, h, strength) => {
 // --- Web Worker Main Listener ---
 
 self.onmessage = function(e) {
-    const { id, rawImageData, removalMode, targetColorHex, colorTolerance, erodeStrength, width, height } = e.data;
+    const { id, rawImageData, removalMode, targetColorHex, colorTolerance, erodeStrength, smoothness, width, height } = e.data;
     
-    // 複製一份 ImageData，確保不會修改傳輸來的原始資料
     let processedImageData = rawImageData; 
     
-    // 執行去背
     if (removalMode === 'flood') {
-        // Flood Fill 模式
+        // 使用連通去背 (無柔化，速度中等，適合中間有洞)
         processedImageData = removeBgFloodFill(processedImageData, width, height, targetColorHex, colorTolerance);
     } else {
-        // Global 模式 (更簡單的顏色判斷)
-        processedImageData = removeBgGlobal(processedImageData, targetColorHex, colorTolerance);
+        // 使用邊緣柔化去背 (品質較高，適合邊緣平滑)
+        processedImageData = removeBgFeathered(processedImageData, targetColorHex, colorTolerance, smoothness);
     }
     
     // 執行邊緣侵蝕
