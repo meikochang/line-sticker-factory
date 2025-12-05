@@ -49,32 +49,25 @@ const removeBgFeathered = (imgData, targetHex, tolerancePercent, smoothnessPerce
             }
         }
     } else {
-        // 優化：RGB 顏色匹配 - 使用平方距離避免 sqrt
+        // 優化：RGB 顏色匹配 - 預先計算目標顏色並優化距離比較
         const target = hexToRgb(targetHex) || {r:0, g:0, b:0};
         const targetR = target.r, targetG = target.g, targetB = target.b;
-        const maxDistSq = 442 * 442; // 使用平方值
-        
-        // 計算平方空間的閾值
-        const edgeStartSq = edgeStart * edgeStart * maxDistSq;
-        const edgeEndSq = edgeEnd * edgeEnd * maxDistSq;
-        const rangeSq = edgeStartSq - edgeEndSq;
+        const maxDist = 442;
         
         for (let i = 0; i < len; i += 4) {
             const r = data[i], g = data[i+1], b = data[i+2];
             
-            // 內聯距離計算 (使用平方避免 sqrt)
+            // 內聯距離計算
             const dr = r - targetR, dg = g - targetG, db = b - targetB;
-            const distanceSq = dr*dr + dg*dg + db*db;
-            
-            // 在平方空間進行比較 (避免 sqrt)
-            const similaritySq = maxDistSq - distanceSq;
+            const distance = Math.sqrt(dr*dr + dg*dg + db*db);
+            const similarity = 1 - (distance / maxDist);
             
             // 內聯 alpha 計算
-            if (similaritySq >= edgeStartSq) {
+            if (similarity >= edgeStart) {
                 data[i+3] = 0; 
-            } else if (similaritySq > edgeEndSq) {
-                const diffSq = similaritySq - edgeEndSq;
-                data[i+3] = Math.round(255 * (1 - Math.sqrt(diffSq / rangeSq)));
+            } else if (similarity > edgeEnd) {
+                const diff = similarity - edgeEnd;
+                data[i+3] = Math.round(255 * (1 - diff / range));
             } else {
                 // 前景像素保持完全不透明
                 data[i+3] = 255;
