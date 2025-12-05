@@ -11,6 +11,9 @@ const hexToRgb = (hex) => {
     } : null;
 };
 
+// 輔助函數：將 alpha 值限制在有效範圍 [0, 255]
+const clampAlpha = (value) => Math.max(0, Math.min(255, value));
+
 // --- 優化的背景移除演算法 ---
 
 // 1. 核心去背邏輯：實現邊緣柔化 (Feathering) - 優化版本
@@ -22,7 +25,8 @@ const removeBgFeathered = (imgData, targetHex, tolerancePercent, smoothnessPerce
     const smoothnessFactor = smoothnessPercent / 100;
     const edgeStart = toleranceFactor;
     const edgeEnd = Math.max(0, edgeStart - smoothnessFactor);
-    const range = Math.max(0.001, edgeStart - edgeEnd); // 防止除以零
+    const MIN_RANGE = 0.001; // 最小範圍值，防止除以零
+    const range = Math.max(MIN_RANGE, edgeStart - edgeEnd);
 
     const isGreenScreen = targetHex.toLowerCase() === '#00ff00';
     
@@ -43,7 +47,7 @@ const removeBgFeathered = (imgData, targetHex, tolerancePercent, smoothnessPerce
             } else if (similarity > edgeEnd) {
                 const diff = similarity - edgeEnd;
                 const alpha = Math.round(255 * (1 - diff / range));
-                data[i+3] = Math.max(0, Math.min(255, alpha)); // 確保在有效範圍內
+                data[i+3] = clampAlpha(alpha);
             } else {
                 // 前景像素保持完全不透明
                 data[i+3] = 255;
@@ -69,7 +73,7 @@ const removeBgFeathered = (imgData, targetHex, tolerancePercent, smoothnessPerce
             } else if (similarity > edgeEnd) {
                 const diff = similarity - edgeEnd;
                 const alpha = Math.round(255 * (1 - diff / range));
-                data[i+3] = Math.max(0, Math.min(255, alpha)); // 確保在有效範圍內
+                data[i+3] = clampAlpha(alpha);
             } else {
                 // 前景像素保持完全不透明
                 data[i+3] = 255;
