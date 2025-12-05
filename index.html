@@ -12,8 +12,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
-        /* 引入 Brush Script 字型用於 Logo 的 M */
-        @import url('https://fonts.googleapis.com/css2?family=Comforter+Brush&display=swap');
         
         body { 
             font-family: 'Noto Sans TC', sans-serif; 
@@ -105,21 +103,9 @@
         const Tag = (props) => <Icon {...props}><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></Icon>;
         const CropIcon = (props) => <Icon {...props}><path d="M6.13 1L6 16a2 2 0 0 0 2 2h15"/><path d="M1 6.13L16 6a2 2 0 0 1 2 2v15"/></Icon>;
 
-        // --- Custom SVG Logo Component (Code-Drawn Meiko Logo) ---
-        const MeikoLogo = () => (
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-8 h-8 rounded-full shadow-sm bg-[#bf0000]">
-                {/* Red Background */}
-                <circle cx="50" cy="50" r="50" fill="#bf0000"/>
-                {/* M - Hand drawn approximation */}
-                <text x="18" y="78" fontFamily="'Comforter Brush', cursive" fontSize="65" fill="white" fontWeight="bold">M</text>
-                {/* eiko */}
-                <text x="50" y="68" fontFamily="'Noto Sans TC', sans-serif" fontSize="24" fill="white" fontWeight="900">eiko</text>
-                {/* 微課頻道 */}
-                <text x="50" y="42" fontFamily="'Noto Sans TC', sans-serif" fontSize="11" fill="white" fontWeight="500">微課頻道</text>
-                {/* Yellow Swoosh */}
-                <path d="M 22 82 Q 55 95 85 68" fill="none" stroke="#FFD700" strokeWidth="2.5" strokeLinecap="round"/>
-            </svg>
-        );
+        // --- FIXED LOGO (Using Notion URL) ---
+        // Added object-cover to prevent deformation
+        const logoSrc = "https://rain-galley-248.notion.site/image/attachment%3A1a4404e1-e6b1-4f29-a495-123224c6135a%3AMeiko_logo.png?table=block&id=2c04c228-35e5-80d2-b534-f270fb01613d&spaceId=cf48a189-fd68-4fe6-a35c-bf6538001b35&width=770&userId=&cache=v2";
 
         // --- WEB WORKER CODE ---
         const workerScript = `
@@ -567,8 +553,8 @@
                                 Line 貼圖自動化助手
                             </h1>
                             <div className="mt-2 text-sm text-slate-500 font-medium flex flex-row items-center gap-2">
-                                {/* FIXED LOGO: Using Custom SVG Component */}
-                                <MeikoLogo />
+                                {/* FIXED LOGO: Using Notion URL with object-cover */}
+                                <img src={logoSrc} alt="Meiko Logo" className="w-8 h-8 rounded-full shadow-sm object-cover" />
                                 <div className="flex items-center gap-1">
                                     <a href="https://www.youtube.com/@meiko1" target="_blank" className="text-slate-800 hover:text-line hover:underline transition-colors font-bold">
                                         Meiko微課頻道
