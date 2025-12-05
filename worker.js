@@ -16,7 +16,7 @@ const hexToRgb = (hex) => {
     } : null;
 };
 
-// 1. HSV 判斷邏輯（已調整，適用於硬邊連通模式）
+// 1. HSV 判斷邏輯（已調整：加入綠色通道純度檢查）
 const isPixelBackgroundHSVHard = (r, g, b, tolerancePercent) => {
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
@@ -33,13 +33,22 @@ const isPixelBackgroundHSVHard = (r, g, b, tolerancePercent) => {
     const value = max / 255;
     
     const toleranceFactor = tolerancePercent / 100;
-
-    // 綠色色相範圍 (H: 60-180)
-    const isGreenHue = (hue >= 60 && hue <= 180);
     
-    // 🌟 調整：收緊 HSV 門檻 (S, V 越接近 1.0 越是純色)
-    // 讓容許度只放寬 S 和 V 的限制，而不是直接降低基線。
-    // 基線 (Base) 設為較高的 0.5/0.5
+    // --- 綠幕去背的強制條件 ---
+    
+    // 🌟 關鍵調整 1: 綠色通道純度檢查 (防止誤殺藍色/紅色)
+    // 綠色通道必須明顯高於紅藍通道。容許度越高，純度要求越低。
+    // 這裡我們只允許 G/R 和 G/B 的比值在一定範圍內。
+    const greenPurityMultiplier = 1.2 * (1 - toleranceFactor * 0.5); // 容許度高，乘數低
+    const isGreenDominant = (g > r * greenPurityMultiplier) && (g > b * greenPurityMultiplier);
+
+    if (!isGreenDominant) {
+        return false; // 如果綠色不佔絕對優勢，立刻判定為前景（保護藍色文字）
+    }
+
+    // 關鍵調整 2: HSV 門檻檢查 (確保是目標範圍內的綠色)
+    const isGreenHue = (hue >= 60 && hue <= 180); // 綠色色相範圍
+    
     const baseSat = 0.5;
     const baseVal = 0.5;
 
@@ -49,7 +58,7 @@ const isPixelBackgroundHSVHard = (r, g, b, tolerancePercent) => {
     
     const isStandardGreenScreen = isGreenHue && saturation >= minSat && value >= minVal;
     
-    // 額外判斷綠色是否明顯佔優勢
+    // 額外判斷綠色是否明顯佔優勢 (防止前景的淺色被誤判)
     const isDominantGreen = (g > r + 30) && (g > b + 30) && (g > 80);
 
     return isStandardGreenScreen || isDominantGreen;
@@ -74,7 +83,6 @@ const removeBgFeathered = (imgData, targetHex, tolerancePercent, smoothnessPerce
         
         if (isGreenScreen) {
             // 對綠幕使用 HSV 邏輯 (使用柔化專用的相似度計算)
-            // 這裡為了讓柔化平滑，similarity 必須是一個連續變量，所以我們使用一個近似值
             const distG = Math.abs(g - 255);
             const distRB = Math.abs(r - 0) + Math.abs(b - 0);
             const score = (distG * 0.5) + distRB;
@@ -102,7 +110,7 @@ const removeBgFeathered = (imgData, targetHex, tolerancePercent, smoothnessPerce
     return imgData;
 };
 
-// 3. 連通去背 (Flood Fill) 邏輯 - HARD EDGE 模式（使用新的 HSV 精確判斷）
+// 3. 連通去背 (Flood Fill) 邏輯 - HARD EDGE 模式（使用最新的綠色純度檢查）
 const removeBgFloodFill = (imgData, w, h, targetHex, tolerancePercent) => {
     const data = imgData.data;
     const isGreenScreen = targetHex.toLowerCase() === '#00ff00';
@@ -112,7 +120,7 @@ const removeBgFloodFill = (imgData, w, h, targetHex, tolerancePercent) => {
 
     const isBackground = (r, g, b) => {
         if (isGreenScreen) {
-            // 綠幕使用最新的精確硬邊判斷邏輯
+            // 綠幕使用最新的精確硬邊判斷邏輯 (包含綠色純度檢查)
             return isPixelBackgroundHSVHard(r, g, b, tolerancePercent);
         } else {
             // 其他顏色使用 RGB 距離判斷
