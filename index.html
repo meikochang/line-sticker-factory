@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Line 貼圖自動化助手 (極速修邊版)</title>
+    <title>Line 貼圖自動化助手 - Meiko微課頻道</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -15,7 +15,8 @@
         
         body { 
             font-family: 'Noto Sans TC', sans-serif; 
-            background-color: #effcf4; 
+            /* 修改背景為 Line 官方綠色 */
+            background-color: #06C755; 
             color: #111827;
         }
 
@@ -101,6 +102,18 @@
         const Star = (props) => <Icon {...props}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></Icon>;
         const Tag = (props) => <Icon {...props}><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></Icon>;
         const CropIcon = (props) => <Icon {...props}><path d="M6.13 1L6 16a2 2 0 0 0 2 2h15"/><path d="M1 6.13L16 6a2 2 0 0 1 2 2v15"/></Icon>;
+
+        // --- Custom SVG Logo (Red Background, White Meiko Text) ---
+        const MeikoLogo = () => (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-8 h-8 rounded-full shadow-sm">
+                <circle cx="50" cy="50" r="50" fill="#bf0000"/>
+                <path d="M25 70 V30 L40 60 L55 30 V70" fill="none" stroke="white" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" opacity="0.9"/>
+                <text x="50" y="85" fontFamily="sans-serif" fontSize="18" fill="white" textAnchor="middle" fontWeight="bold">Meiko</text>
+            </svg>
+        );
+        // 使用更精確的 SVG Data URI 替代 (模擬您提供的圖片樣式)
+        const logoSrc = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI1MCIgZmlsbD0iI2JmMDAwMCIvPjx0ZXh0IHg9IjUwIiB5PSI2MCIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNZXJpZiIgZm9udC13ZWlnaHQ9ImJvbGQiIGZvbnQtc2l6ZT0iNDUiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5NPC90ZXh0Pjx0ZXh0IHg9IjUwIiB5PSI4NSIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNZXJpZiIgZm9udC13ZWlnaHQ9ImJvbGQiIGZvbnQtc2l6ZT0iMTYiIGZpbGw9IndoaXRlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5NZWlrbzwvdGV4dD48L3N2Zz4=";
+
 
         // --- WEB WORKER CODE ---
         const workerScript = `
@@ -404,14 +417,11 @@
                     const rawH = piece.rawCanvas.height;
                     
                     // --- KEY FIX: ZOOM/CROP LOGIC ---
-                    // Calculate base scale to fit
                     const baseScale = Math.min(workW/rawW, workH/rawH);
-                    // Apply user Zoom Level (e.g., 1.05) to push edges out
                     const finalScale = baseScale * zoomLevel;
                     
                     const drawW = rawW * finalScale;
                     const drawH = rawH * finalScale;
-                    // Center the zoomed image
                     const dx = (workW - drawW) / 2;
                     const dy = (workH - drawH) / 2;
 
@@ -483,7 +493,7 @@
                     setColorTolerance(30); 
                     setSmoothness(2);
                     setDespill(true);
-                    setZoomLevel(1.05); // Default zoom for green screen
+                    setZoomLevel(1.05); 
                 } else if (type === 'black') {
                     setTargetColorHex("#000000");
                     setColorTolerance(15);
@@ -516,20 +526,20 @@
                 <div className="min-h-screen p-6 max-w-5xl mx-auto pb-32">
                     <header className="mb-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-6">
                         <div className="flex flex-col items-center md:items-start">
-                            {/* Modified Title */}
                             <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
                                 <MessageCircle className="w-8 h-8 text-line" />
                                 Line 貼圖自動化助手
                             </h1>
-                            {/* Modified Subtitle with Logo */}
                             <div className="mt-2 text-sm text-slate-500 font-medium flex flex-row items-center gap-2">
-                                <img src="data:image/png;base64,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" alt="Meiko Logo" className="w-8 h-8 rounded-full shadow-sm" />
+                                {/* FIXED LOGO: Using SVG Data URI */}
+                                <img src={logoSrc} alt="Meiko Logo" className="w-8 h-8 rounded-full shadow-sm" />
                                 <div className="flex items-center gap-1">
                                     <a href="https://www.youtube.com/@meiko1" target="_blank" className="text-slate-800 hover:text-line hover:underline transition-colors font-bold">
                                         Meiko微課頻道
                                     </a>
                                     <span className="text-slate-300 mx-1">|</span>
-                                    <span className="text-line">極速修邊版 V3.0</span>
+                                    {/* MODIFIED SUBTITLE */}
+                                    <span className="text-line font-bold">飆速製作Line貼圖工廠</span>
                                 </div>
                             </div>
                         </div>
