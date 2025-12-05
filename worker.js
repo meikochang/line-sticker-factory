@@ -43,22 +43,24 @@ const removeBgFeathered = (imgData, targetHex, tolerancePercent, smoothnessPerce
             } else if (similarity > edgeEnd) {
                 const diff = similarity - edgeEnd;
                 data[i+3] = Math.round(255 * (1 - diff / range));
+            } else {
+                // 前景像素保持完全不透明
+                data[i+3] = 255;
             }
-            // else: 保持原有 alpha (不用設為 255，因為已經是前景)
         }
     } else {
-        // 優化：RGB 顏色匹配 - 預先計算目標顏色和平方避免 sqrt
+        // 優化：RGB 顏色匹配 - 使用平方距離避免 sqrt
         const target = hexToRgb(targetHex) || {r:0, g:0, b:0};
         const targetR = target.r, targetG = target.g, targetB = target.b;
-        const maxDist = 442;
+        const maxDistSq = 442 * 442; // 使用平方值
         
         for (let i = 0; i < len; i += 4) {
             const r = data[i], g = data[i+1], b = data[i+2];
             
-            // 內聯距離計算 (避免函數呼叫)
+            // 內聯距離計算 (使用平方避免 sqrt)
             const dr = r - targetR, dg = g - targetG, db = b - targetB;
-            const distance = Math.sqrt(dr*dr + dg*dg + db*db);
-            const similarity = 1 - (distance / maxDist);
+            const distanceSq = dr*dr + dg*dg + db*db;
+            const similarity = 1 - Math.sqrt(distanceSq / maxDistSq);
             
             // 內聯 alpha 計算
             if (similarity >= edgeStart) {
@@ -66,6 +68,9 @@ const removeBgFeathered = (imgData, targetHex, tolerancePercent, smoothnessPerce
             } else if (similarity > edgeEnd) {
                 const diff = similarity - edgeEnd;
                 data[i+3] = Math.round(255 * (1 - diff / range));
+            } else {
+                // 前景像素保持完全不透明
+                data[i+3] = 255;
             }
         }
     }
@@ -115,29 +120,34 @@ const removeBgFloodFill = (imgData, w, h, targetHex, tolerancePercent) => {
         
         if (isGreenScreen) {
             // 內聯綠幕判斷邏輯 (避免函數呼叫)
+            // 快速檢測：綠色通道必須明顯高於紅藍通道
             const isGreenDominant = (g > r * greenPurityMultiplier) && (g > b * greenPurityMultiplier);
             
             if (isGreenDominant) {
-                // HSV 計算
-                const max = Math.max(r, g, b);
-                const min = Math.min(r, g, b);
-                const delta = max - min;
+                // 額外快速判斷：明顯的綠色優勢
+                const isDominantGreen = (g > r + 30) && (g > b + 30) && (g > 80);
                 
-                if (delta !== 0) {
-                    let hue = 0;
-                    if (max === g) hue = 60 * ((b - r) / delta + 2);
-                    else if (max === r) hue = 60 * ((g - b) / delta + 4);
-                    else hue = 60 * ((r - g) / delta);
-                    if (hue < 0) hue += 360;
+                if (isDominantGreen) {
+                    isBg = true;
+                } else {
+                    // 只有在需要時才計算 HSV (較昂貴的運算)
+                    const max = Math.max(r, g, b);
+                    const min = Math.min(r, g, b);
+                    const delta = max - min;
                     
-                    const saturation = delta / max;
-                    const value = max / 255;
-                    
-                    const isGreenHue = (hue >= 60 && hue <= 180);
-                    const isStandardGreenScreen = isGreenHue && saturation >= minSat && value >= minVal;
-                    const isDominantGreen = (g > r + 30) && (g > b + 30) && (g > 80);
-                    
-                    isBg = isStandardGreenScreen || isDominantGreen;
+                    if (delta !== 0) {
+                        let hue = 0;
+                        if (max === g) hue = 60 * ((b - r) / delta + 2);
+                        else if (max === r) hue = 60 * ((g - b) / delta + 4);
+                        else hue = 60 * ((r - g) / delta);
+                        if (hue < 0) hue += 360;
+                        
+                        const saturation = delta / max;
+                        const value = max / 255;
+                        
+                        const isGreenHue = (hue >= 60 && hue <= 180);
+                        isBg = isGreenHue && saturation >= minSat && value >= minVal;
+                    }
                 }
             }
         } else {
