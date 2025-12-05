@@ -22,7 +22,7 @@ const removeBgFeathered = (imgData, targetHex, tolerancePercent, smoothnessPerce
     const smoothnessFactor = smoothnessPercent / 100;
     const edgeStart = toleranceFactor;
     const edgeEnd = Math.max(0, edgeStart - smoothnessFactor);
-    const range = edgeStart - edgeEnd;
+    const range = Math.max(0.001, edgeStart - edgeEnd); // 防止除以零
 
     const isGreenScreen = targetHex.toLowerCase() === '#00ff00';
     
@@ -42,7 +42,8 @@ const removeBgFeathered = (imgData, targetHex, tolerancePercent, smoothnessPerce
                 data[i+3] = 0; 
             } else if (similarity > edgeEnd) {
                 const diff = similarity - edgeEnd;
-                data[i+3] = Math.round(255 * (1 - diff / range));
+                const alpha = Math.round(255 * (1 - diff / range));
+                data[i+3] = Math.max(0, Math.min(255, alpha)); // 確保在有效範圍內
             } else {
                 // 前景像素保持完全不透明
                 data[i+3] = 255;
@@ -67,7 +68,8 @@ const removeBgFeathered = (imgData, targetHex, tolerancePercent, smoothnessPerce
                 data[i+3] = 0; 
             } else if (similarity > edgeEnd) {
                 const diff = similarity - edgeEnd;
-                data[i+3] = Math.round(255 * (1 - diff / range));
+                const alpha = Math.round(255 * (1 - diff / range));
+                data[i+3] = Math.max(0, Math.min(255, alpha)); // 確保在有效範圍內
             } else {
                 // 前景像素保持完全不透明
                 data[i+3] = 255;
