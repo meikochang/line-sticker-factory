@@ -54,20 +54,27 @@ const removeBgFeathered = (imgData, targetHex, tolerancePercent, smoothnessPerce
         const targetR = target.r, targetG = target.g, targetB = target.b;
         const maxDistSq = 442 * 442; // 使用平方值
         
+        // 計算平方空間的閾值
+        const edgeStartSq = edgeStart * edgeStart * maxDistSq;
+        const edgeEndSq = edgeEnd * edgeEnd * maxDistSq;
+        const rangeSq = edgeStartSq - edgeEndSq;
+        
         for (let i = 0; i < len; i += 4) {
             const r = data[i], g = data[i+1], b = data[i+2];
             
             // 內聯距離計算 (使用平方避免 sqrt)
             const dr = r - targetR, dg = g - targetG, db = b - targetB;
             const distanceSq = dr*dr + dg*dg + db*db;
-            const similarity = 1 - Math.sqrt(distanceSq / maxDistSq);
+            
+            // 在平方空間進行比較 (避免 sqrt)
+            const similaritySq = maxDistSq - distanceSq;
             
             // 內聯 alpha 計算
-            if (similarity >= edgeStart) {
+            if (similaritySq >= edgeStartSq) {
                 data[i+3] = 0; 
-            } else if (similarity > edgeEnd) {
-                const diff = similarity - edgeEnd;
-                data[i+3] = Math.round(255 * (1 - diff / range));
+            } else if (similaritySq > edgeEndSq) {
+                const diffSq = similaritySq - edgeEndSq;
+                data[i+3] = Math.round(255 * (1 - Math.sqrt(diffSq / rangeSq)));
             } else {
                 // 前景像素保持完全不透明
                 data[i+3] = 255;
@@ -172,9 +179,11 @@ const applyErosion = (imgData, w, h, strength) => {
 
     const data = imgData.data;
     
+    // 優化：在循環外分配 buffer，重複使用
+    const currentAlpha = new Uint8Array(w * h);
+    
     for (let k = 0; k < strength; k++) {
         // 只複製 alpha 通道
-        const currentAlpha = new Uint8Array(w * h);
         for(let i = 0; i < w * h; i++) {
             currentAlpha[i] = data[i*4+3];
         }

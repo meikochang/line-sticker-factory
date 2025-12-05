@@ -382,8 +382,10 @@
                     const piece = slicedPieces[i];
                     setProgress(`準備處理: ${i + 1} / 12`);
                     
-                    // 🔧 優化：清空重用的 canvas，而非創建新的
+                    // 🔧 優化：清空重用的 canvas，並重置狀態
                     workCtx.clearRect(0, 0, workW, workH);
+                    workCtx.setTransform(1, 0, 0, 1, 0, 0); // 重置轉換
+                    workCtx.globalCompositeOperation = 'source-over'; // 重置混合模式
                     
                     const rawW = piece.rawCanvas.width;
                     const rawH = piece.rawCanvas.height;
