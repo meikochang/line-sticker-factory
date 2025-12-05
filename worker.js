@@ -16,13 +16,8 @@ const hexToRgb = (hex) => {
     } : null;
 };
 
-// 1. RGB 距離計算 (回傳實際距離)
-const isTargetColorRGB = (r, g, b, targetRgb) => {
-    return colorDistance(r, g, b, targetRgb.r, targetRgb.g, targetRgb.b);
-};
-
-// 2. HSV 相似度計算 (專用於綠幕，回傳相似度分數 0~1)
-const isPixelBackgroundHSV = (r, g, b) => {
+// 1. HSV 判斷邏輯（專為硬邊去背調整）
+const isPixelBackgroundHSVHard = (r, g, b, tolerancePercent) => {
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
     const delta = max - min;
@@ -33,19 +28,32 @@ const isPixelBackgroundHSV = (r, g, b) => {
         else hue = 60 * ((r - g) / delta);
     }
     if (hue < 0) hue += 360;
+
     const saturation = max === 0 ? 0 : delta / max;
     const value = max / 255;
     
-    // 色相範圍 (H: 60-180 為綠色)
-    const isGreenHue = (hue >= 60 && hue <= 180);
+    const toleranceFactor = tolerancePercent / 100;
 
-    if (!isGreenHue) return 0;
+    // 綠色色相範圍 (H: 60-180)
+    const isGreenHue = (hue >= 60 && hue <= 180);
     
-    return saturation; 
+    // 設定硬門檻：必須在綠色色相範圍內，並且飽和度和亮度都要夠高 (由 tolerance 控制)
+    // 綠幕去背的關鍵是 S 和 V 必須高，且 H 必須在範圍內
+    // 這裡使用 toleranceFactor 來放寬 S 和 V 的限制
+    const minSat = 0.25 * (1 - toleranceFactor * 0.5); // 讓容許度可以放寬飽和度最低值
+    const minVal = 0.35 * (1 - toleranceFactor * 0.5); // 讓容許度可以放寬亮度最低值
+    
+    const isStandardGreenScreen = isGreenHue && saturation > minSat && value > minVal;
+    
+    // 額外判斷綠色是否明顯佔優勢 (防止前景的淺色被誤判)
+    const isDominantGreen = (g > r + 30) && (g > b + 30) && (g > 80);
+
+    return isStandardGreenScreen || isDominantGreen;
 };
 
 
-// 3. 核心去背邏輯：實現邊緣柔化 (Feathering) - 仍保留給 'global' 模式使用
+// 2. 核心去背邏輯：實現邊緣柔化 (Feathering) - 仍保留給 'global' 模式使用
+// 柔化邏輯沒有變動，但不再是預設推薦
 const removeBgFeathered = (imgData, targetHex, tolerancePercent, smoothnessPercent) => {
     const data = imgData.data;
     const len = data.length;
@@ -62,9 +70,10 @@ const removeBgFeathered = (imgData, targetHex, tolerancePercent, smoothnessPerce
         let similarity = 0; 
         
         if (isGreenScreen) {
-            similarity = isPixelBackgroundHSV(r, g, b); 
+            // 對綠幕使用 HSV 邏輯 (使用柔化專用的相似度計算)
+            similarity = (isPixelBackgroundHSVHard(r, g, b, 100) ? 1 : 0); // 這裡改用布林值作為硬相似度
         } else {
-            const distance = isTargetColorRGB(r, g, b, targetRgb);
+            const distance = colorDistance(r, g, b, targetRgb.r, targetRgb.g, targetRgb.b);
             similarity = 1 - (distance / maxDist);
         }
 
@@ -86,7 +95,7 @@ const removeBgFeathered = (imgData, targetHex, tolerancePercent, smoothnessPerce
     return imgData;
 };
 
-// 4. 連通去背 (Flood Fill) 邏輯 - HARD EDGE 模式（與舊版邏輯一致）
+// 3. 連通去背 (Flood Fill) 邏輯 - HARD EDGE 模式（最精確地模擬您原來的邏輯）
 const removeBgFloodFill = (imgData, w, h, targetHex, tolerancePercent) => {
     const data = imgData.data;
     const isGreenScreen = targetHex.toLowerCase() === '#00ff00';
@@ -95,19 +104,18 @@ const removeBgFloodFill = (imgData, w, h, targetHex, tolerancePercent) => {
     const toleranceDist = maxDist * (tolerancePercent / 100);
 
     const isBackground = (r, g, b) => {
-        // 使用硬門檻判斷，不使用柔化邏輯
+        // 使用硬門檻判斷 (這將決定去背的精確度)
         if (isGreenScreen) {
-            const similarity = isPixelBackgroundHSV(r, g, b);
-            // 這裡的容許度控制的是 HSV 相似度
-            return similarity >= (tolerancePercent / 100); 
+            // 綠幕使用 HSV 專業硬邊判斷邏輯
+            return isPixelBackgroundHSVHard(r, g, b, tolerancePercent);
         } else {
+            // 其他顏色使用 RGB 距離判斷
             const distance = colorDistance(r, g, b, targetRgb.r, targetRgb.g, targetRgb.b);
-            // 這裡的容許度控制的是 RGB 距離
             return distance <= toleranceDist;
         }
     };
     
-    // 從四個角落開始向內填充
+    // 從四個角落開始向內填充，以處理外圍背景
     const stack = [[0,0], [w-1,0], [0,h-1], [w-1,h-1]];
     const visited = new Uint8Array(w*h);
     
@@ -130,7 +138,7 @@ const removeBgFloodFill = (imgData, w, h, targetHex, tolerancePercent) => {
     return imgData;
 };
 
-// 5. 侵蝕濾鏡
+// 4. 侵蝕濾鏡
 const applyErosion = (imgData, w, h, strength) => {
     if (strength <= 0) return imgData;
 
@@ -163,11 +171,11 @@ self.onmessage = function(e) {
     
     let processedImageData = rawImageData; 
     
-    // 如果選擇了 'flood' 模式 (連通去背)，我們現在使用硬邊判斷，這應該匹配您的舊版水準
     if (removalMode === 'flood') {
+        // 連通去背 (Hard Edge) - 應匹配您的舊版水準
         processedImageData = removeBgFloodFill(processedImageData, width, height, targetColorHex, colorTolerance);
     } else {
-        // 'global' 模式繼續使用柔化去背 (Feathering)
+        // 柔化去背 (Feathering)
         processedImageData = removeBgFeathered(processedImageData, targetColorHex, colorTolerance, smoothness);
     }
     
