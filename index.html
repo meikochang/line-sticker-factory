@@ -103,6 +103,10 @@
         const Tag = (props) => <Icon {...props}><path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"/><path d="M7 7h.01"/></Icon>;
         const CropIcon = (props) => <Icon {...props}><path d="M6.13 1L6 16a2 2 0 0 0 2 2h15"/><path d="M1 6.13L16 6a2 2 0 0 1 2 2v15"/></Icon>;
 
+        // --- FIXED LOGO (Base64) ---
+        const logoSrc = "data:image/png;base64,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";
+
+
         // --- WEB WORKER CODE ---
         const workerScript = `
         self.onmessage = function(e) {
@@ -299,17 +303,14 @@
             const getPromptText = () => {
                 const theme = PROMPT_THEMES[activeTheme];
                 const style = PROMPT_STYLES[activeStyle];
-                return `✅ 12 格角色貼圖集｜Prompt 建議... (省略，同上)`;
-            };
-
-            const handleCopyPrompt = () => {
-                const text = `✅ 12 格角色貼圖集｜Prompt 建議
+                
+                return `✅ 12 格角色貼圖集｜Prompt 建議
 請參考上傳圖片中的角色，生成 一張包含 12 個不同動作的角色貼圖集。
 
 [角色與風格設定]
 角色一致性：必須完全維持原圖主角的髮型、服裝、五官與整體外觀特徵。
 構圖風格：畫面僅包含「角色 + 文字」，不包含任何場景背景。
-畫風設定：【${PROMPT_STYLES[activeStyle].desc}】。
+畫風設定：【${style.desc}】。
 貼紙風格（去背友善）：角色與文字外圍皆需加入 粗白色外框（Sticker Style）。背景統一為 #00FF00（純綠色），不可有雜點。
 
 [畫面佈局與尺寸規格]
@@ -319,17 +320,21 @@
 
 [文字設計]
 語言：【台灣繁體中文】
-文字內容：【${PROMPT_THEMES[activeTheme].texts}】
+文字內容：【${theme.texts}】
 字型風格：【可愛 Q 版字型，顏色鮮豔、易讀，多色彩混合，絕對禁止使用任何綠色（包含深綠、淺綠、螢光綠、藍綠）與黑色，因為會導致去背錯誤。請改用紅、藍、紫、橘、黃等高對比色彩。】
 排版：文字大小約佔單張貼圖 1/3，文字可適度壓在衣服邊角等非重要區域，不能遮臉。
 
 [表情與動作設計]
-表情必須明顯、誇張、情緒豐富：【${PROMPT_THEMES[activeTheme].emotions}】
-角色動作需與文字情境一致：例如【${PROMPT_THEMES[activeTheme].actions}】
+表情必須明顯、誇張、情緒豐富：【${theme.emotions}】
+角色動作需與文字情境一致：例如【${theme.actions}】
 12 格皆須為 不同動作與不同表情。
 
 [輸出格式]
 一張大圖，內含 4 × 3 的 12 張貼圖。背景必須為 純綠色 #00FF00。每格角色 + 文字均附上粗白邊。`;
+            };
+
+            const handleCopyPrompt = () => {
+                const text = getPromptText();
                 navigator.clipboard.writeText(text).then(() => {
                     setCopySuccess(true);
                     setTimeout(() => setCopySuccess(false), 2000);
@@ -491,20 +496,49 @@
                 }
             };
 
-            // --- Simplified Prompt Display for Code Length ---
+            // --- RESTORED: Full Detailed Prompt Display ---
             const PromptDisplay = () => {
                 const theme = PROMPT_THEMES[activeTheme];
                 const style = PROMPT_STYLES[activeStyle];
+                
                 return (
                     <div className="prompt-content text-sm font-mono bg-white p-4 rounded-lg border border-slate-200 h-80 overflow-y-auto">
                         <div className="font-bold text-xl mb-2">✅ 12 格角色貼圖集｜Prompt 建議</div>
                         <p>請參考上傳圖片中的角色，生成 一張包含 12 個不同動作的角色貼圖集。</p>
+                        
                         <h2>[角色與風格設定]</h2>
-                        <ul><li>畫風設定：<span className="var-highlight">【{style.desc}】</span>。</li></ul>
+                        <ul>
+                            <li>角色一致性：必須完全維持原圖主角的髮型、服裝、五官與整體外觀特徵。</li>
+                            <li>構圖風格：畫面僅包含「角色 + 文字」，不包含任何場景背景。</li>
+                            <li>畫風設定：<span className="var-highlight">【{style.desc}】</span>。</li>
+                            <li>貼紙風格（去背友善）：角色與文字外圍皆需加入 粗白色外框（Sticker Style）。背景統一為 <span className="fixed-val">#00FF00（純綠色）</span>，不可有雜點。</li>
+                        </ul>
+
+                        <h2>[畫面佈局與尺寸規格]</h2>
+                        <ul>
+                            <li>整體為 4 × 3 佈局，共 12 張貼圖。總尺寸：<span className="fixed-val">1480 × 960 px</span>。</li>
+                            <li>每張小圖約 370 × 320 px（自動等比縮放填滿排列）。每張貼圖四周預留約 0.2 cm Padding，避免畫面互相黏住。</li>
+                            <li>鏡頭多樣化：全身 + 半身混合，必須包含正面、側面、俯角等不同視角。</li>
+                        </ul>
+
                         <h2>[文字設計]</h2>
                         <ul>
+                            <li>語言：<span className="var-highlight">【台灣繁體中文】</span></li>
                             <li>文字內容：<span className="var-highlight">【{theme.texts}】</span></li>
-                            <li>字型風格：<span className="black-highlight">【可愛Q版字型...】</span></li>
+                            <li>字型風格：<span className="black-highlight">【可愛 Q 版字型，顏色鮮豔、易讀，多色彩混合，絕對禁止使用任何綠色（包含深綠、淺綠、螢光綠、藍綠）與黑色，因為會導致去背錯誤。請改用紅、藍、紫、橘、黃等高對比色彩。】</span></li>
+                            <li>排版：文字大小約佔單張貼圖 1/3，文字可適度壓在衣服邊角等非重要區域，不能遮臉。</li>
+                        </ul>
+
+                        <h2>[表情與動作設計]</h2>
+                        <ul>
+                            <li>表情必須明顯、誇張、情緒豐富：<span className="var-highlight">【{theme.emotions}】</span></li>
+                            <li>角色動作需與文字情境一致：例如<span className="var-highlight">【{theme.actions}】</span></li>
+                            <li>12 格皆須為 不同動作與不同表情。</li>
+                        </ul>
+
+                        <h2>[輸出格式]</h2>
+                        <ul>
+                            <li>一張大圖，內含 4 × 3 的 12 張貼圖。背景必須為 <span className="fixed-val">純綠色 #00FF00</span>。每格角色 + 文字均附上粗白邊。</li>
                         </ul>
                     </div>
                 );
@@ -519,8 +553,8 @@
                                 Line 貼圖自動化助手
                             </h1>
                             <div className="mt-2 text-sm text-slate-500 font-medium flex flex-row items-center gap-2">
-                                {/* FIXED LOGO: Using User Provided URL */}
-                                <img src="https://googleusercontent.com/profile/picture/0" alt="Meiko Logo" className="w-8 h-8 rounded-full shadow-sm" />
+                                {/* FIXED LOGO: Using Base64 Data URI to prevent broken image */}
+                                <img src={logoSrc} alt="Meiko Logo" className="w-8 h-8 rounded-full shadow-sm" />
                                 <div className="flex items-center gap-1">
                                     <a href="https://www.youtube.com/@meiko1" target="_blank" className="text-slate-800 hover:text-line hover:underline transition-colors font-bold">
                                         Meiko微課頻道
@@ -608,92 +642,4 @@
                                             </div>
                                         </div>
 
-                                        <button onClick={()=>setShowAdvanced(!showAdvanced)} className="w-full flex items-center justify-between text-xs text-slate-500 hover:text-slate-700 pt-2 border-t border-slate-200">
-                                            <span className="flex items-center gap-1"><Settings className="w-3 h-3"/> 顯示進階設定</span>
-                                            <ChevronDown className={`w-3 h-3 transition-transform ${showAdvanced ? 'rotate-180' : ''}`} />
-                                        </button>
-
-                                        <div className={`collapse-content ${showAdvanced ? 'collapse-open' : ''}`}>
-                                            <div className="pt-4 space-y-4">
-                                                <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-                                                    <div className="flex justify-between text-[10px] text-slate-400 mb-1">
-                                                        <span className="flex items-center gap-1"><CropIcon className="w-3 h-3"/> 裁切縮放 (去除黑邊)</span>
-                                                        <span className="font-bold text-line">{Math.round((zoomLevel - 1) * 100)}%</span>
-                                                    </div>
-                                                    <input type="range" min="1.00" max="1.50" step="0.01" value={zoomLevel} onChange={(e)=>setZoomLevel(Number(e.target.value))} className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer"/>
-                                                    <div className="text-[10px] text-slate-400 mt-1">若兩側仍有黑邊，請將數值往右拉大</div>
-                                                </div>
-
-                                                <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-                                                    <div className="flex justify-between text-[10px] text-slate-400 mb-1"><span>目標顏色</span><span className="font-mono">{targetColorHex}</span></div>
-                                                    <input type="color" value={targetColorHex} onChange={(e)=>setTargetColorHex(e.target.value)} className="w-full h-8 rounded cursor-pointer border border-slate-300 p-0" />
-                                                </div>
-                                                <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-                                                    <div className="flex justify-between text-[10px] text-slate-400 mb-1"><span>色彩容許度 (Tolerance)</span><span>{colorTolerance}</span></div>
-                                                    <input type="range" min="1" max="100" value={colorTolerance} onChange={(e)=>setColorTolerance(Number(e.target.value))} className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer"/>
-                                                </div>
-                                                <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-                                                    <div className="flex justify-between text-[10px] text-slate-400 mb-1"><span>邊緣柔化 (Smoothness)</span><span>{smoothness}</span></div>
-                                                    <input type="range" min="0" max="10" step="1" value={smoothness} onChange={(e)=>setSmoothness(Number(e.target.value))} className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer"/>
-                                                </div>
-                                                <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-                                                    <span className="text-[10px] text-slate-400">溢色去除 (Despill)</span>
-                                                    <input type="checkbox" checked={despill} onChange={(e)=>setDespill(e.target.checked)} className="accent-green-500 w-4 h-4"/>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                        <div className="flex justify-center gap-4 pt-8 border-t border-slate-100 mt-6">
-                            <button onClick={()=>setStep(1)} className="px-6 py-3 rounded-xl font-bold text-slate-500 bg-slate-100 hover:bg-slate-200 hover:text-slate-700 transition">重新上傳</button>
-                            <button onClick={performProcessing} disabled={isProcessing} className="bg-line hover:bg-green-600 text-white px-12 py-3 rounded-xl font-bold shadow-lg shadow-green-100 transition-all btn-press flex items-center justify-center gap-2 min-w-[240px]">
-                                {isProcessing ? <><Loader /><span>處理中 ({processedCount}/12)</span></> : <><Eraser />執行極速去背</>}
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Step 3: Download */}
-                    <div className={`step-card bg-white rounded-3xl shadow-lg border border-slate-100 p-8 mb-8 ${step !== 3 && 'hidden'}`}>
-                         <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-8 gap-6 pb-6 border-b border-slate-100">
-                            <div className="flex-1">
-                                <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2 mb-2"><CheckCircle className="text-line"/>設定與打包</h2>
-                                <p className="text-slate-500 text-sm">請勾選主圖(Main)與標籤圖(Tab)。</p>
-                            </div>
-                            <div className="bg-slate-50 px-4 py-3 rounded-xl border border-slate-200 flex items-center gap-3">
-                                <div className="flex flex-col"><span className="text-xs font-bold text-slate-500 flex items-center gap-1"><Hash className="w-3 h-3"/> 起始編號</span><span className="text-[10px] text-slate-400">接續上一批次</span></div>
-                                <input type="number" min="1" value={startNumber} onChange={(e) => setStartNumber(Math.max(1, parseInt(e.target.value) || 1))} className="w-20 h-10 border border-slate-300 rounded-lg text-center font-bold text-lg focus:ring-2 focus:ring-green-500 outline-none" />
-                            </div>
-                            <button onClick={downloadZip} className="w-full xl:w-auto bg-line hover:bg-green-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all btn-press flex items-center justify-center gap-2"><Download className="w-5 h-5" />下載完整 ZIP</button>
-                        </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                            {finalImages.map((img, idx) => (
-                                <div key={img.id} className="bg-white rounded-2xl border border-slate-200 p-3 hover:border-green-300 hover:shadow-md transition-all">
-                                    <div className="aspect-[370/320] grid-bg rounded-xl flex items-center justify-center overflow-hidden border border-slate-100 mb-3"><img src={img.dataUrl} className="w-full h-full object-contain" /></div>
-                                    <div className="text-center text-sm font-bold text-slate-600 mb-4 bg-slate-100 rounded py-1">{getFileName(idx)}.png</div>
-                                    <div className="space-y-2">
-                                        <label className="flex items-center gap-2 cursor-pointer group">
-                                            <input type="radio" name="main_select" checked={mainId === img.id} onChange={() => setMainId(img.id)} className="hidden custom-radio"/>
-                                            <div className={`flex-1 text-xs border rounded-lg px-2 py-2 flex items-center gap-1 justify-center transition-all ${mainId === img.id ? 'bg-green-50 border-line text-line font-bold' : 'bg-slate-50 border-slate-200 text-slate-500 group-hover:bg-white group-hover:border-green-200'}`}><Star className="w-3 h-3" /> Main</div>
-                                        </label>
-                                        <label className="flex items-center gap-2 cursor-pointer group">
-                                            <input type="radio" name="tab_select" checked={tabId === img.id} onChange={() => setTabId(img.id)} className="hidden custom-radio"/>
-                                            <div className={`flex-1 text-xs border rounded-lg px-2 py-2 flex items-center gap-1 justify-center transition-all ${tabId === img.id ? 'bg-green-50 border-line text-line font-bold' : 'bg-slate-50 border-slate-200 text-slate-500 group-hover:bg-white group-hover:border-green-200'}`}><Tag className="w-3 h-3" /> Tab</div>
-                                        </label>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        <div className="text-center mt-10"><button onClick={()=>setStep(1)} className="text-slate-400 hover:text-slate-600 text-sm font-medium transition-colors underline">處理下一張原始圖</button></div>
-                    </div>
-                    <footer className="text-center text-lg font-bold text-black mt-12 mb-8">© 2025 Meiko 微課頻道 | LINE Sticker Factory</footer>
-                </div>
-            );
-        };
-
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-</html>
+                                        <button onClick={()=>setShowAdvanced(!showAdvanced)} className="w-full flex items
